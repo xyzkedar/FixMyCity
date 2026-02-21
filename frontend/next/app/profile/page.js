@@ -63,24 +63,48 @@ export default function ProfilePage() {
         setSuccess('');
 
         try {
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: user.id,
-                    username: profile.username,
-                    full_name: profile.full_name,
-                    bio: profile.bio,
-                    phone: profile.phone,
-                    location: profile.location,
-                    avatar_url: profile.avatar_url,
-                    user_type: profile.user_type,
-                    updated_at: new Date().toISOString()
-                });
+            const updatePayload = {
+                username: profile.username || null,
+                full_name: profile.full_name || null,
+                bio: profile.bio || null,
+                phone: profile.phone || null,
+                location: profile.location || null,
+                avatar_url: profile.avatar_url || null,
+                updated_at: new Date().toISOString()
+            };
 
-            if (updateError) throw updateError;
+            const { data, error: updateError } = await supabase
+                .from('profiles')
+                .update(updatePayload)
+                .eq('id', user.id)
+                .select();
+
+            if (updateError) {
+                if (updateError.code === '23505') {
+                    throw new Error('This username is already taken. Please choose another one.');
+                }
+                throw updateError;
+            }
+
             setSuccess('Profile updated successfully!');
+
+            // Refresh local state with returned data
+            if (data && data[0]) {
+                const updated = data[0];
+                setProfile(prev => ({
+                    ...prev,
+                    username: updated.username || '',
+                    full_name: updated.full_name || '',
+                    bio: updated.bio || '',
+                    phone: updated.phone || '',
+                    location: updated.location || '',
+                    avatar_url: updated.avatar_url || ''
+                }));
+            }
+
             setTimeout(() => setSuccess(''), 3000);
         } catch (err) {
+            console.error('[Profile] Save Error:', err);
             setError(err.message || 'Failed to update profile');
         } finally {
             setSaving(false);
