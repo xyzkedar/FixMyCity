@@ -517,6 +517,11 @@ function AuthModal({ isOpen, onClose, userType, onSubmit, loading, error, onGoog
         <button className='modal-close' onClick={onClose}>&times;</button>
         <h2 style={{ marginBottom: '8px', color: 'var(--text-primary)' }}>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
         <p style={{ marginBottom: '24px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{userType === 'authority' ? 'Authority' : 'Citizen'} {isLogin ? 'Sign In' : 'Sign Up'}</p>
+        {!isLogin && userType === 'authority' && (
+          <div style={{ background: 'rgba(0, 212, 255, 0.05)', border: '1px solid var(--accent)', color: 'var(--accent)', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.8rem', lineHeight: '1.4' }}>
+            Note: Authority accounts require manual verification by the city administrator before access is granted.
+          </div>
+        )}
         {error && <div style={{ background: 'rgba(255,51,102,0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '10px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.85rem' }}>{error}</div>}
         <button onClick={onGoogleSignIn} disabled={loading} style={{ width: '100%', padding: '12px', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '20px', opacity: loading ? 0.7 : 1 }}>Continue with Google</button>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}><div style={{ flex: 1, height: '1px', background: 'var(--border)' }} /><span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>or</span><div style={{ flex: 1, height: '1px', background: 'var(--border)' }} /></div>

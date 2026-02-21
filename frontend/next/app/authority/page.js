@@ -150,12 +150,32 @@ export default function AuthorityDashboard() {
     setTimeout(() => setToast({ show: false, msg: '' }), 3000);
   };
 
+  const [isApproved, setIsApproved] = useState(false);
+  const [checkingApproval, setCheckingApproval] = useState(true);
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { window.location.href = '/'; return; }
       setUser(session.user);
-      loadReports();
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('user_type, is_approved')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error || profile.user_type !== 'authority') {
+        window.location.href = '/citizen';
+        return;
+      }
+
+      setIsApproved(profile.is_approved);
+      setCheckingApproval(false);
+
+      if (profile.is_approved) {
+        loadReports();
+      }
     };
     checkAuth();
   }, []);
@@ -229,6 +249,33 @@ export default function AuthorityDashboard() {
     resolved: reports.filter(r => r.status === 'resolved').length,
     rejected: reports.filter(r => r.status === 'rejected').length
   };
+
+  if (checkingApproval) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg-void)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)' }}>
+        Verifying Security Credentials...
+      </div>
+    );
+  }
+
+  if (!isApproved) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg-void)', paddingTop: '60px' }}>
+        <Navbar user={user} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', textAlign: 'center', padding: '0 24px' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '24px' }}>🛡️</div>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px' }}>Approval Pending</h1>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', fontSize: '1.1rem', lineHeight: 1.6 }}>
+            Your account is currently under review by the city administration. You will be granted access once your official identity is verified.
+          </p>
+          <div style={{ marginTop: '32px', padding: '16px 24px', background: 'rgba(0, 212, 255, 0.1)', border: '1px solid var(--accent)', borderRadius: '12px', color: 'var(--accent)', fontSize: '0.9rem' }}>
+            Reference ID: {user?.id}
+          </div>
+          <button onClick={() => window.location.href = '/'} style={{ marginTop: '32px', background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)', padding: '10px 24px', borderRadius: '8px', cursor: 'pointer' }}>Back to Home</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-void)', paddingTop: '60px' }}>
