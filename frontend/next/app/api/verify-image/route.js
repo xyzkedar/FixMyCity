@@ -2,24 +2,20 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
     try {
-        const formData = await req.formData();
-        const image = formData.get('image');
+        const { imageUrl } = await req.json();
         const hfToken = process.env.HUGGINGFACE_API_TOKEN;
+
+        console.log(`[AI-API] Received verification request for: ${imageUrl}`);
 
         // If no token or tiny token, return simulation data
         if (!hfToken || hfToken.length < 10) {
-            console.log("[AI-API] No Hugging Face token or token too short. Returning simulation data.");
+            console.log("[AI-API] No Hugging Face token. Simulation mode.");
             return NextResponse.json({ label: 'Civic Issue (Simulation)', score: 0.9, isVerified: true });
         }
 
-        const arrayBuffer = await image.arrayBuffer();
-        const base64Image = Buffer.from(arrayBuffer).toString('base64');
-
-        // Use ConvNeXT - highly accurate and supported on the Router
-        const modelId = "facebook/convnext-tiny-224";
+        // Use ResNet-50 - reliably supported on the Router for URL-based inference
+        const modelId = "microsoft/resnet-50";
         const apiUrl = `https://router.huggingface.co/hf-inference/models/${modelId}`;
-
-        console.log(`[AI-API] Requesting verification (ConvNeXT Mode) from: ${apiUrl}`);
 
         const response = await fetch(apiUrl, {
             headers: {
@@ -29,7 +25,7 @@ export async function POST(req) {
                 "x-wait-for-model": "true"
             },
             method: "POST",
-            body: JSON.stringify({ inputs: base64Image }),
+            body: JSON.stringify({ inputs: imageUrl }),
         });
 
         if (!response.ok) {

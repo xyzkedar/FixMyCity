@@ -174,60 +174,10 @@ export default function CitizenDashboard() {
     let aiLabel = null;
     let aiConfidence = null;
     try {
-      // 1. AI Image Verification
-      if (reportData.image) {
-        setStatusText('AI is analyzing image...');
-        const formData = new FormData();
-        formData.append('image', reportData.image);
-
-        const verifyRes = await fetch('/api/verify-image', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!verifyRes.ok) {
-          const errorData = await verifyRes.json().catch(() => ({ error: 'AI server is temporarily busy' }));
-
-          // If the AI is down/gone, give the user an option to proceed anyway
-          const proceed = confirm(`AI Verification is currently unavailable (Error: ${errorData.error}). Would you like to submit the report without AI verification?`);
-          if (!proceed) {
-            setSubmitting(false);
-            setStatusText('');
-            return;
-          }
-          // Proceeding without AI data
-          aiLabel = 'Manual Submission';
-          aiConfidence = 0;
-        } else {
-          const verifyData = await verifyRes.json();
-
-          if (verifyData.isDown) {
-            const proceed = confirm(`Note: AI Verification Service is currently unavailable. Would you like to proceed with a manual submission?`);
-            if (!proceed) {
-              setSubmitting(false);
-              setStatusText('');
-              return;
-            }
-            aiLabel = 'Manual (AI Down)';
-            aiConfidence = 0;
-            setStatusText('Proceeding with manual submission...');
-          } else if (!verifyData.isVerified) {
-            alert(`AI rejected this image (Detected: ${verifyData.label || 'Unknown'}, Score: ${((verifyData.score || 0) * 100).toFixed(1)}%). Please upload a clear photo of a civic issue.`);
-            setSubmitting(false);
-            setStatusText('');
-            return;
-          } else {
-            aiLabel = verifyData.label;
-            aiConfidence = verifyData.score;
-            setStatusText(`AI Verified: ${verifyData.label}`);
-          }
-        }
-      }
-
-      // 2. Upload image to Supabase Storage
+      // 1. Upload image to Supabase Storage FIRST (to get a public URL for AI)
       let imageUrl = null;
       if (reportData.image) {
-        setStatusText('Uploading photo...');
+        setStatusText('Uploading photo for verification...');
         const fileName = 'reports/' + Date.now() + '-' + reportData.image.name;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('reports')
@@ -242,6 +192,50 @@ export default function CitizenDashboard() {
 
         const { data: urlData } = supabase.storage.from('reports').getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
+      }
+
+      // 2. AI Image Verification (Using the Public URL)
+      if (imageUrl) {
+        setStatusText('AI is analyzing image...');
+        const verifyRes = await fetch('/api/verify-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl })
+        });
+
+        if (!verifyRes.ok) {
+          const errorData = await verifyRes.json().catch(() => ({ error: 'AI server is temporarily busy' }));
+          const proceed = confirm(`AI Verification is currently unavailable (Error: ${errorData.error}). Would you like to submit the report anyway?`);
+          if (!proceed) {
+            setSubmitting(false);
+            setStatusText('');
+            return;
+          }
+          aiLabel = 'Manual Submission';
+          aiConfidence = 0;
+        } else {
+          const verifyData = await verifyRes.json();
+          if (verifyData.isDown) {
+            const proceed = confirm(`Note: AI Verification Service is currently unavailable. Proceed with manual submission?`);
+            if (!proceed) {
+              setSubmitting(false);
+              setStatusText('');
+              return;
+            }
+            aiLabel = 'Manual (AI Down)';
+            aiConfidence = 0;
+          } else if (!verifyData.isVerified) {
+            alert(`AI rejected this image (Detected: ${verifyData.label || 'Unknown'}, Score: ${((verifyData.score || 0) * 100).toFixed(1)}%). Please upload a clear photo of a civic issue.`);
+            // Optional: delete from storage here?
+            setSubmitting(false);
+            setStatusText('');
+            return;
+          } else {
+            aiLabel = verifyData.label;
+            aiConfidence = verifyData.score;
+            setStatusText(`AI Verified: ${verifyData.label}`);
+          }
+        }
       }
 
       // 3. Insert report directly to Supabase
