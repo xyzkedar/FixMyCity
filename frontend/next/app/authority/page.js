@@ -15,54 +15,86 @@ function ReportCard({ report, onUpdateStatus, onEdit }) {
   };
   const status = statusColors[report.status] || statusColors.pending;
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '20px', transition: 'all 0.2s' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{report.title || 'Untitled Report'}</h3>
-        <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', background: status.bg, color: status.color }}>{report.status}</span>
-      </div>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '12px', lineHeight: 1.5 }}>{report.description || 'No description'}</p>
-      <div style={{ display: 'flex', gap: '16px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-        <span>Date: {report.created_at ? new Date(report.created_at).toLocaleDateString() : 'N/A'}</span>
-        <span>Category: {report.category || 'General'}</span>
-      </div>
-      {report.ai_label && (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: '#10d9a0', background: 'rgba(16,217,160,0.1)', padding: '2px 8px', borderRadius: '4px', marginBottom: '16px', border: '1px solid rgba(16,217,160,0.2)' }}>
-          <span style={{ fontSize: '0.9rem' }}>✨</span> AI Verified: {report.ai_label} ({(report.ai_confidence * 100).toFixed(0)}%)
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '12px', padding: '0', overflow: 'hidden', transition: 'all 0.2s' }}>
+      {report.image_url && (
+        <div style={{ width: '100%', height: '180px', overflow: 'hidden', borderBottom: '1px solid var(--border)' }}>
+          <img
+            src={report.image_url}
+            alt={report.title}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
         </div>
       )}
-      {report.status === 'pending' && (
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            onClick={async (e) => {
-              const btn = e.currentTarget;
-              const originalText = btn.innerText;
-              btn.innerText = '...';
-              btn.disabled = true;
-              await onUpdateStatus(report.id, 'resolved');
-              btn.innerText = originalText;
-              btn.disabled = false;
-            }}
-            style={{ flex: 1, padding: '8px 16px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
-          >
-            Mark Resolved
-          </button>
-          <button
-            onClick={async (e) => {
-              const btn = e.currentTarget;
-              const originalText = btn.innerText;
-              btn.innerText = '...';
-              btn.disabled = true;
-              await onUpdateStatus(report.id, 'rejected');
-              btn.innerText = originalText;
-              btn.disabled = false;
-            }}
-            style={{ flex: 1, padding: '8px 16px', background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
-          >
-            Reject
-          </button>
-          <button onClick={() => onEdit(report)} style={{ padding: '8px 16px', background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Edit</button>
+      <div style={{ padding: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{report.title || 'Untitled Report'}</h3>
+          <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', background: status.bg, color: status.color }}>{report.status}</span>
         </div>
-      )}
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '12px', lineHeight: 1.5 }}>{report.description || 'No description'}</p>
+        <div style={{ display: 'flex', gap: '16px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+          <span>Date: {report.created_at ? new Date(report.created_at).toLocaleDateString() : 'N/A'}</span>
+          <span>Category: {report.category || 'General'}</span>
+        </div>
+        {(report.latitude && report.longitude) && (
+          <div style={{ marginBottom: '16px', padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>📍</span> Location Coordinates
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+                {parseFloat(report.latitude).toFixed(4)}, {parseFloat(report.longitude).toFixed(4)}
+              </span>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${report.latitude},${report.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: '0.75rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600, borderBottom: '1px solid var(--accent)' }}
+              >
+                Open in Maps →
+              </a>
+            </div>
+          </div>
+        )}
+        {report.ai_label && (
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem', color: '#10d9a0', background: 'rgba(16,217,160,0.1)', padding: '2px 8px', borderRadius: '4px', marginBottom: '16px', border: '1px solid rgba(16,217,160,0.2)' }}>
+            <span style={{ fontSize: '0.9rem' }}>✨</span> AI Verified: {report.ai_label} ({(report.ai_confidence * 100).toFixed(0)}%)
+          </div>
+        )}
+        {report.status === 'pending' && (
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={async (e) => {
+                const btn = e.currentTarget;
+                const originalText = btn.innerText;
+                btn.innerText = '...';
+                btn.disabled = true;
+                await onUpdateStatus(report.id, 'resolved');
+                btn.innerText = originalText;
+                btn.disabled = false;
+              }}
+              style={{ flex: 1, padding: '8px 16px', background: 'var(--accent)', color: '#000', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+            >
+              Mark Resolved
+            </button>
+            <button
+              onClick={async (e) => {
+                const btn = e.currentTarget;
+                const originalText = btn.innerText;
+                btn.innerText = '...';
+                btn.disabled = true;
+                await onUpdateStatus(report.id, 'rejected');
+                btn.innerText = originalText;
+                btn.disabled = false;
+              }}
+              style={{ flex: 1, padding: '8px 16px', background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+            >
+              Reject
+            </button>
+            <button onClick={() => onEdit(report)} style={{ padding: '8px 16px', background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Edit</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
