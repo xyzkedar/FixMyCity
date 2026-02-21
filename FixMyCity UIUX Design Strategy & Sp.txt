@@ -1,0 +1,67 @@
+FixMyCity: UI/UX Design Strategy & Specification
+
+1. Project Overview
+Product Name: FixMyCity
+Product Type: Smart City Civic Issue Reporting Web Application
+Target Audience: Citizens (Reporters) and Municipal Authorities (Admins)
+Core Value Prop: Seamless, AI-verified infrastructure reporting using a futuristic, high-trust interface.
+
+2. Design Philosophy: "The Transparent City"
+The visual direction follows a Glassmorphic / Futuristic Soft-UI aesthetic. The goal is to make a bureaucratic process feel high-tech, urgent, and transparent.
+Clarity: Using "Glass" layers to represent the transparency between government and citizens.
+Urgency: High-contrast neon accents to highlight critical infrastructure failures.
+Intelligence: Visual feedback (scanning animations) when the Hugging Face AI API is processing data.
+
+3. Visual Identity & Brand System
+3.1 Color Palette (Neon-Dark Theme)
+Element	Hex Code	Visual Use
+Primary (Action)	#00F2FF	Electric Cyan - Buttons, Active States, Hyperlinks.
+Secondary (Authority)	#7000FF	Neon Purple - Admin Dashboards, Login Screens.
+Background	#0A0A0C	Deep Midnight - Main canvas.
+Success/Verified	#00FF94	Spring Green - AI-verified reports.
+Warning/Pending	#FFB800	Amber Glow - Reports awaiting review.
+3.2 Typography
+Headings: Orbitron or Rajdhani (Weight: Bold/700). Used for a "Command Center" HUD feel.
+
+Body Text: Plus Jakarta Sans or Inter (Weight: Regular/400 & Medium/500). Optimized for high legibility on dark backgrounds.
+
+4. UI Component Specifications
+4.1 The "Glass" Surface
+All containers should utilize the following CSS-inspired properties:
+
+Background: rgba(255, 255, 255, 0.05)
+
+Backdrop Blur: 15px to 20px.
+
+Border: 1px solid rgba(255, 255, 255, 0.1) to define edges against the dark background.
+
+4.2 AI Verification Interface (The "Scanner")
+When a user uploads a photo of a pothole or garbage:
+
+Visual Cue: A horizontal cyan laser line moves up and down the image preview.
+
+Feedback: A glass badge appears saying "Analyzing via Hugging Face AI..."
+
+Result: Upon verification, the border of the card glows Spring Green.
+
+5. User Experience (UX) Flow
+5.1 Citizen Reporting (3-Step Frictionless Flow)
+Capture: User uploads/snaps a photo. AI automatically suggests the category (e.g., "Water Leak") based on the image.
+
+Locate: Auto-fetch GPS coordinates via the browser/mobile API.
+
+Submit: One-tap submission with a "Submission Successful" haptic/visual glow animation.
+
+5.2 Admin Verification (The Command Center)
+Density: High-information density with glassmorphic data cards.
+
+Prioritization: Issues are sorted by "Urgency Score" (calculated by AI and user frequency).
+
+Actionability: Quick-action buttons to "Deploy Crew" or "Mark Resolved."
+
+6. Technical Design Constraints
+Performance: Backdrop-filter (blur) can be GPU intensive. Ensure fallback solid colors for low-end mobile devices.
+
+Accessibility: Ensure all neon text meets WCAG contrast standards against the dark backgrounds.
+
+Responsiveness: The layout should transition from a multi-column dashboard on Desktop to a single-column "Feed" on Mobile.

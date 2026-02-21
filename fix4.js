@@ -1,0 +1,1 @@
+const fs=require('fs');let c=fs.readFileSync('C:/FixMyCIty/frontend/next/app/authority/page.js','utf8');c=c.replace(/onClick=\(\(\)=>onEdit\(report\)\}\}\s+style=/g,'onClick={()=>onEdit(report)} style=');fs.writeFileSync('C:/FixMyCIty/frontend/next/app/authority/page.js',c);console.log('Fixed');

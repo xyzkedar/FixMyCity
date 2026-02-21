@@ -1,0 +1,252 @@
+:root {
+  --accent: #00d4ff;
+  --accent-dim: #00aad0;
+  --accent-glow: rgba(0,212,255,0.28);
+  --accent-faint: rgba(0,212,255,0.07);
+  --gold: #fbbf24;
+  --gold-dim: #d97706;
+  --gold-glow: rgba(251,191,36,0.25);
+  --gold-faint: rgba(251,191,36,0.08);
+  --bg-void: #020814;
+  --bg-deep: #040e1f;
+  --bg-panel: #071529;
+  --bg-card: #0a1c35;
+  --bg-card2: #0d2040;
+  --bg-primary: #040e1f;
+  --bg-secondary: #071529;
+  --border: rgba(0,212,255,0.14);
+  --border-bright: rgba(0,212,255,0.45);
+  --text-primary: #e8f4ff;
+  --text-secondary: #7090b8;
+  --text-muted: #3d5c80;
+  --white: #ffffff;
+  --danger: #ff3366;
+  --warning: #fb923c;
+  --safe: #00d4ff;
+  --solved-clr: #00d4ff;
+  --unsolved-clr: #ff3366;
+  --pending-clr: #fb923c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: #10d9a0;
+  opacity: 0.6;
+  border-radius: 3px;
+}
+
+/* Glass Card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+/* Button Styles */
+.btn-primary {
+  background: #10d9a0;
+  color: #000;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.btn-primary:hover {
+  box-shadow: 0 0 20px var(--gold-glow);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: 1px solid var(--accent);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.btn-outline:hover {
+  background: var(--accent-faint);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--bg-panel);
+  border: 1px solid var(--accent);
+  padding: 14px 20px;
+  border-radius: 10px;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: 0.35s;
+  z-index: 9999;
+}
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Grid Background */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0,212,255,.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,.08) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+  50% { box-shadow: 0 0 40px var(--accent-glow); }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Login Dropdown Styles */
+.login-dropdown-container {
+  position: relative;
+}
+
+.login-dropdown-btn:hover {
+  box-shadow: 0 4px 12px rgba(16, 217, 160, 0.4);
+  transform: translateY(-1px);
+}
+
+.login-dropdown-menu {
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-card) !important;
+}
+
+/* Input Styles */
+input, textarea, select {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+}
+.modal-overlay.open {
+  display: flex;
+}
+
+.modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-bright);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status-badge.pending {
+  background: rgba(251, 146, 60, 0.2);
+  color: var(--pending-clr);
+}
+.status-badge.resolved {
+  background: rgba(0, 212, 255, 0.2);
+  color: var(--solved-clr);
+}
+.status-badge.rejected {
+  background: rgba(255, 51, 102, 0.2);
+  color: var(--unsolved-clr);
+}
+
+

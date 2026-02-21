@@ -1,0 +1,1 @@
+const fs=require('fs');let c=fs.readFileSync('C:/FixMyCIty/frontend/next/app/authority/page.js','utf8');c=c.replace(/\)\}\}\s+style=/g,')}} style=');c=c.replace(/\)\}\s+style=/g,')} style=');fs.writeFileSync('C:/FixMyCIty/frontend/next/app/authority/page.js',c);console.log('Fixed');
