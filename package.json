@@ -1,4 +1,9 @@
 {
+  "name": "fixmycity-monorepo",
+  "scripts": {
+    "start": "cd eve && npm install && npm start",
+    "build": "echo 'No root build needed'"
+  },
   "devDependencies": {
     "supabase": "^2.76.11"
   },
