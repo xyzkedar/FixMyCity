@@ -181,6 +181,33 @@ export default function UserProfileMenu({ user, onSignOut }) {
             <button
               onClick={() => {
                 setIsOpen(false);
+                window.location.href = '/leaderboard';
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-primary)',
+                textAlign: 'left',
+                cursor: 'pointer',
+                borderRadius: '8px',
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-card)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <span style={{ fontSize: '1.1rem' }}>🏆</span>
+              <span>Leaderboard</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setIsOpen(false);
                 onSignOut();
               }}
               style={{

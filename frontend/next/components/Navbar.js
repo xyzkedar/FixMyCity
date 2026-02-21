@@ -93,6 +93,15 @@ export default function Navbar({ user }) {
                                         <span>📊</span> Dashboard
                                     </button>
 
+                                    <button
+                                        onClick={() => { router.push('/leaderboard'); setIsOpen(false); }}
+                                        style={{ width: '100%', padding: '10px 16px', background: 'transparent', border: 'none', color: 'var(--text-primary)', textAlign: 'left', cursor: 'pointer', borderRadius: '6px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '10px' }}
+                                        onMouseEnter={(e) => e.target.style.background = 'var(--bg-card)'}
+                                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                    >
+                                        <span>🏆</span> Leaderboard
+                                    </button>
+
                                     <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
 
                                     <button
