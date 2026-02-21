@@ -17,20 +17,8 @@ export default function LeaderboardPage() {
     }, []);
 
     const fetchLeaderboard = async () => {
+        setLoading(true);
         try {
-            // PRIMARY: Try API first
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-            const res = await fetch(`${apiUrl}/api/reports/leaderboard/top`);
-            const data = await res.json();
-
-            if (data.leaderboard && data.leaderboard.length > 0) {
-                console.log('Leaderboard from API:', data.leaderboard);
-                setLeaderboard(data.leaderboard);
-                setLoading(false);
-                return;
-            }
-
-            // SECONDARY: Direct Supabase fetch if API is empty or fails
             console.log('Fetching leaderboard directly from Supabase...');
             const { data: reports, error } = await supabase
                 .from('reports')
@@ -38,32 +26,44 @@ export default function LeaderboardPage() {
                 .eq('status', 'resolved')
                 .not('resolved_by', 'is', null);
 
-            if (error) throw error;
-
-            const map = {};
-            reports.forEach(r => {
-                const id = r.resolved_by;
-                if (!map[id]) {
-                    const displayName = (r.profiles?.full_name && r.profiles.full_name.trim() !== '')
-                        ? r.profiles.full_name
-                        : (r.profiles?.username || 'Officer');
-
-                    map[id] = {
-                        id,
-                        name: displayName,
-                        username: r.profiles?.username || 'officer',
-                        avatar: r.profiles?.avatar_url || null,
-                        resolvedCount: 0
-                    };
+            if (error) {
+                console.error('Direct fetch error, trying API:', error);
+                // Fallback to API if DB direct fetch fails
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+                const res = await fetch(`${apiUrl}/api/reports/leaderboard/top`);
+                const data = await res.json();
+                if (data.leaderboard) {
+                    setLeaderboard(data.leaderboard);
                 }
-                map[id].resolvedCount++;
-            });
+                // No return here, let finally handle setLoading(false)
+            } else {
+                const map = {};
+                reports.forEach(r => {
+                    const id = r.resolved_by;
+                    if (!id) return;
 
-            const sorted = Object.values(map).sort((a, b) => b.resolvedCount - a.resolvedCount);
-            console.log('Leaderboard from Direct DB:', sorted);
-            setLeaderboard(sorted);
+                    if (!map[id]) {
+                        const displayName = (r.profiles?.full_name && r.profiles.full_name.trim() !== '')
+                            ? r.profiles.full_name
+                            : (r.profiles?.username || 'Officer');
+
+                        map[id] = {
+                            id,
+                            name: displayName,
+                            username: r.profiles?.username || 'officer',
+                            avatar: r.profiles?.avatar_url || null,
+                            resolvedCount: 0
+                        };
+                    }
+                    map[id].resolvedCount++;
+                });
+
+                const sorted = Object.values(map).sort((a, b) => b.resolvedCount - a.resolvedCount);
+                console.log('Leaderboard Data:', sorted);
+                setLeaderboard(sorted);
+            }
         } catch (err) {
-            console.error('Leaderboard error:', err);
+            console.error('Final Leaderboard error:', err);
         } finally {
             setLoading(false);
         }
@@ -99,6 +99,7 @@ export default function LeaderboardPage() {
                             <div
                                 key={officer.id}
                                 style={{
+                                    '--gold': '#FFD700',
                                     background: index === 0 ? 'rgba(0, 212, 255, 0.05)' : 'var(--bg-card)',
                                     border: index === 0 ? '1px solid var(--accent)' : '1px solid var(--border)',
                                     borderRadius: '16px',
