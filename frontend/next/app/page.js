@@ -608,31 +608,45 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    // PRIMARY: Fetch directly from Supabase for zero-latency accuracy
+    const fetchRealStats = async () => {
+      try {
+        const { count: total, error: tErr } = await supabase
+          .from('reports')
+          .select('*', { count: 'exact', head: true });
 
+        const { count: resolved, error: rErr } = await supabase
+          .from('reports')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'resolved');
+
+        if (!tErr && !rErr) {
+          console.log('--- Direct DB Stats ---', { total, resolved });
+          setStats({ total: total || 0, resolved: resolved || 0 });
+        }
+      } catch (err) {
+        console.error('Direct stats error:', err);
+      }
+    };
+
+    fetchRealStats();
+
+    // SECONDARY: Standard API fetch
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     fetch(`${apiUrl}/api/reports/stats/summary`)
       .then(res => res.json())
       .then(data => {
-        console.log('--- Stats Debug ---', data);
-        if (data.stats) setStats(data.stats);
-        else setStats({ total: 0, resolved: 0 });
+        if (data.stats && data.stats.total > 0) setStats(data.stats);
       })
-      .catch(err => {
-        console.error('Stats fetch error:', err);
-        setStats({ total: 0, resolved: 0 });
-      });
+      .catch(err => console.log('API Stats fetch skipped (using direct)'));
 
+    // Testimonials
     fetch(`${apiUrl}/api/testimonials?limit=3`)
       .then(res => res.json())
       .then(data => {
-        if (data.testimonials) {
-          setTestimonials(data.testimonials);
-        }
+        if (data.testimonials) setTestimonials(data.testimonials);
       })
-      .catch(err => {
-        console.error('Testimonials fetch error:', err);
-        setTestimonials([]);
-      });
+      .catch(err => console.log('Testimonials fetch error'));
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
