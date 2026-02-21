@@ -12,14 +12,14 @@ const reports = new Hono();
 reports.post('/submit', async (c) => {
   try {
     const formData = await c.req.parseBody();
-    
-    const { 
-      image, 
-      latitude, 
-      longitude, 
-      description, 
+
+    const {
+      image,
+      latitude,
+      longitude,
+      description,
       category,
-      userId 
+      userId
     } = formData;
 
     // Validate required fields
@@ -29,12 +29,12 @@ reports.post('/submit', async (c) => {
 
     // Handle image upload to Supabase Storage
     let imageUrl = null;
-    
+
     if (image && typeof image !== 'string') {
       // Upload image to Supabase Storage
       const fileBuffer = await image.arrayBuffer();
       const fileName = `reports/${Date.now()}-${image.name}`;
-      
+
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('reports')
         .upload(fileName, fileBuffer, {
@@ -51,7 +51,7 @@ reports.post('/submit', async (c) => {
       const { data: { publicUrl } } = supabase.storage
         .from('reports')
         .getPublicUrl(fileName);
-      
+
       imageUrl = publicUrl;
     } else if (typeof image === 'string') {
       // Image already uploaded (URL passed)
@@ -61,11 +61,11 @@ reports.post('/submit', async (c) => {
     // Run AI verification
     console.log('');
     const verification = await verifyImage(imageUrl || '');
-    
+
     if (!verification.valid) {
-      return c.json({ 
+      return c.json({
         error: 'Report rejected: Image does not appear to show a civic issue',
-        verification 
+        verification
       }, 403);
     }
 
@@ -97,8 +97,8 @@ reports.post('/submit', async (c) => {
 
     console.log('');
 
-    return c.json({ 
-      success: true, 
+    return c.json({
+      success: true,
       report,
       verification
     });
@@ -122,7 +122,7 @@ reports.get('/', async (c) => {
     if (category) {
       query = query.eq('category', category);
     }
-    
+
     if (status) {
       query = query.eq('status', status);
     }
@@ -161,7 +161,7 @@ reports.get('/', async (c) => {
 reports.get('/:id', async (c) => {
   try {
     const { id } = c.req.param();
-    
+
     const { data: report, error } = await supabase
       .from('reports')
       .select('*')
@@ -182,14 +182,22 @@ reports.get('/:id', async (c) => {
 reports.patch('/:id/status', async (c) => {
   try {
     const { id } = c.req.param();
-    const { status, notes } = await c.req.json();
+    const { status, notes, resolvedBy } = await c.req.json();
+
+    const updateData = {
+      status,
+      notes,
+      updated_at: new Date().toISOString()
+    };
+
+    if (status === 'resolved') {
+      updateData.resolved_at = new Date().toISOString();
+      if (resolvedBy) updateData.resolved_by = resolvedBy;
+    }
 
     const { data: report, error } = await supabase
       .from('reports')
-      .update({ 
-        status,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -199,6 +207,44 @@ reports.patch('/:id/status', async (c) => {
     }
 
     return c.json({ success: true, report });
+  } catch (err) {
+    return c.json({ error: err.message }, 500);
+  }
+});
+
+// Get authority leaderboard
+reports.get('/leaderboard/top', async (c) => {
+  try {
+    // We want to join reports and profiles
+    // But since it's a count, we can do it in two steps or use a join
+    const { data, error } = await supabase
+      .from('reports')
+      .select('resolved_by, profiles(full_name, avatar_url, username)')
+      .eq('status', 'resolved')
+      .not('resolved_by', 'is', null);
+
+    if (error) throw error;
+
+    // Grouping by authority
+    const leaderboard = {};
+    data.forEach(item => {
+      const id = item.resolved_by;
+      if (!leaderboard[id]) {
+        leaderboard[id] = {
+          id,
+          name: item.profiles?.full_name || 'Officer',
+          username: item.profiles?.username || 'officer',
+          avatar: item.profiles?.avatar_url || null,
+          resolvedCount: 0
+        };
+      }
+      leaderboard[id].resolvedCount++;
+    });
+
+    // Convert to sorted array
+    const sortedLeaderboard = Object.values(leaderboard).sort((a, b) => b.resolvedCount - a.resolvedCount);
+
+    return c.json({ leaderboard: sortedLeaderboard });
   } catch (err) {
     return c.json({ error: err.message }, 500);
   }
@@ -237,16 +283,16 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   const R = 6371; // Radius of earth in km
   const dLat = deg2rad(lat2 - lat1);
   const dLon = deg2rad(lon2 - lon1);
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2); 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
 function deg2rad(deg) {
-  return deg * (Math.PI/180);
+  return deg * (Math.PI / 180);
 }
 
 export default reports;

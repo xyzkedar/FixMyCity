@@ -172,9 +172,19 @@ export default function AuthorityDashboard() {
 
   const handleUpdateStatus = async (reportId, newStatus) => {
     try {
+      const updatePayload = {
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+
+      if (newStatus === 'resolved') {
+        updatePayload.resolved_by = user.id;
+        updatePayload.resolved_at = new Date().toISOString();
+      }
+
       const { data, error } = await supabase
         .from('reports')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .update(updatePayload)
         .eq('id', reportId)
         .select();
 

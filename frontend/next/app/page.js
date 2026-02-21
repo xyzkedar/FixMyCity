@@ -447,9 +447,13 @@ function LandingPage({ onAuthClick, stats, testimonials }) {
 
         <div style={{ display: 'flex', gap: '16px', margin: '16px 0', flexWrap: 'wrap', justifyContent: 'center', animation: 'fadeInUp 0.6s ease-out 0.4s both' }}>
           <HeroCTAButton onAuthClick={onAuthClick} />
-          <button onClick={() => onAuthClick('authority')} style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)', fontWeight: 700, padding: '12px 32px', borderRadius: '8px', cursor: 'pointer', fontSize: '1.1rem', transition: 'all 0.3s', boxShadow: '0 4px 12px rgba(0,212,255,0.1)' }}
+          <button onClick={() => window.location.href = '/leaderboard'} style={{ background: 'transparent', color: 'var(--text-primary)', border: '1px solid var(--border)', fontWeight: 700, padding: '12px 32px', borderRadius: '8px', cursor: 'pointer', fontSize: '1.1rem', transition: 'all 0.3s', boxShadow: '0 4px 12px rgba(0,212,255,0.1)' }}
             onMouseEnter={(e) => { e.target.style.background = 'rgba(0,212,255,0.1)'; e.target.style.borderColor = 'var(--accent)'; e.target.style.transform = 'translateY(-2px)'; }}
             onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.borderColor = 'var(--border)'; e.target.style.transform = 'translateY(0)'; }}
+          >View Leaderboard 🏆</button>
+          <button onClick={() => onAuthClick('authority')} style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)', fontWeight: 700, padding: '12px 32px', borderRadius: '8px', cursor: 'pointer', fontSize: '1.1rem', transition: 'all 0.3s' }}
+            onMouseEnter={(e) => { e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.transform = 'translateY(-2px)'; }}
+            onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.transform = 'translateY(0)'; }}
           >Authority Portal</button>
         </div>
 
