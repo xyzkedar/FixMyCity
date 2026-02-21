@@ -69,11 +69,36 @@ export async function POST(req) {
             isCivicMatch = top.some(r => civicKeywords.some(key => r.label.toLowerCase().includes(key)));
         }
 
-        // C. Is it relevant to the TITLE?
+        // C. Is it relevant to the TITLE? (Enhanced Soft-Matching)
         const titleLower = (title || "").toLowerCase();
+
+        // Synonyms to bridge human terms and AI labels
+        const synonyms = {
+            'pothole': ['pavement', 'road', 'asphalt', 'cobblestone', 'cracked'],
+            'light': ['lamp', 'street', 'pole', 'electric', 'night'],
+            'trash': ['garbage', 'waste', 'recycling', 'bin', 'plastic', 'bag', 'debris'],
+            'sewer': ['drain', 'manhole', 'water', 'street', 'grating'],
+            'tree': ['plant', 'branch', 'nature', 'wood'],
+            'broken': ['damaged', 'crack', 'hazard']
+        };
+
+        const getExpandedKeywords = (term) => {
+            let keys = [term];
+            for (let root in synonyms) {
+                if (term.includes(root)) keys.push(...synonyms[root]);
+            }
+            return keys;
+        };
+
         const isRelevantToTitle = Array.isArray(resnetResult) && resnetResult.slice(0, 10).some(r => {
-            const labelParts = r.label.toLowerCase().split(/[ ,]+/);
-            return labelParts.some(p => p.length > 3 && titleLower.includes(p));
+            const label = r.label.toLowerCase();
+            const titleWords = titleLower.split(/[ ,._-]+/).filter(w => w.length > 2);
+
+            // Check if any word in the title (or its synonyms) appears in the AI label
+            return titleWords.some(word => {
+                const expanded = getExpandedKeywords(word);
+                return expanded.some(e => label.includes(e)) || label.includes(word);
+            });
         });
 
         console.log(`[AI-API] Analysis: Civic=${isCivicMatch}, AI=${isAIGenerated}, TitleMatch=${isRelevantToTitle}`);
@@ -88,6 +113,28 @@ export async function POST(req) {
             });
         }
 
+        // If it's a known civic issue but relevance failed, we check if the top label is just too different
+        // Only reject on mismatch if confidence is very high
+        const STRICT_MISMATCH_THRESHOLD = 0.7;
+
+        if (title && !isRelevantToTitle && topScore > STRICT_MISMATCH_THRESHOLD) {
+            const titleWords = titleLower.split(' ').filter(w => w.length > 3);
+            const hasSoftMatch = titleWords.some(word => {
+                const expanded = getExpandedKeywords(word);
+                return expanded.some(e => topLabel.toLowerCase().includes(e));
+            });
+
+            if (!hasSoftMatch) {
+                return NextResponse.json({
+                    isVerified: false,
+                    label: topLabel,
+                    score: topScore,
+                    reason: `Image mismatch: The photo appears to show "${topLabel}", which doesn't seem to match your title. Please verify both.`
+                });
+            }
+        }
+
+        // If it's not a civic match AND score is low, we reject
         if (!isCivicMatch && topScore < AI_CONFIDENCE_THRESHOLD) {
             return NextResponse.json({
                 isVerified: false,
@@ -95,22 +142,6 @@ export async function POST(req) {
                 score: topScore,
                 reason: 'This image doesn\'t appear to be related to any city infrastructure or waste issues.'
             });
-        }
-
-        if (title && !isRelevantToTitle && topScore > 0.4) {
-            // If AI is very confident it's something totally different than the title
-            // (e.g. Title "Pothole" but AI sees "Cat")
-            const titleKeywords = titleLower.split(' ').filter(w => w.length > 3);
-            const hasKeywordMatch = titleKeywords.some(kw => topLabel.toLowerCase().includes(kw));
-
-            if (!hasKeywordMatch) {
-                return NextResponse.json({
-                    isVerified: false,
-                    label: topLabel,
-                    score: topScore,
-                    reason: `Image mismatch: The photo shows "${topLabel}", but your title is about "${title}". Please ensure the photo matches your report.`
-                });
-            }
         }
 
         return NextResponse.json({
