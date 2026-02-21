@@ -1,43 +1,55 @@
 import { NextResponse } from 'next/server';
+import { Buffer } from 'buffer';
 
 export async function POST(req) {
     try {
-        const { imageUrl } = await req.json();
+        const { imageUrl, title } = await req.json();
         const hfToken = process.env.HUGGINGFACE_API_TOKEN;
 
-        console.log(`[AI-API] Received verification request for: ${imageUrl}`);
+        console.log(`[AI-API] VERIFYING: ${imageUrl} | Title: ${title}`);
 
-        // If no token or tiny token, return simulation data
         if (!hfToken || hfToken.length < 10) {
-            console.log("[AI-API] No Hugging Face token. Simulation mode.");
-            return NextResponse.json({ label: 'Civic Issue (Simulation)', score: 0.9, isVerified: true });
+            return NextResponse.json({ label: 'Civic Issue (Simulation)', score: 0.9, isVerified: true, isAI: false });
         }
 
-        // Use ResNet-50 - reliably supported on the Router for URL-based inference
-        const modelId = "microsoft/resnet-50";
-        const apiUrl = `https://router.huggingface.co/hf-inference/models/${modelId}`;
-
-        const response = await fetch(apiUrl, {
-            headers: {
-                "Authorization": `Bearer ${hfToken.trim()}`,
-                "Content-Type": "application/json",
-                "x-use-cache": "true",
-                "x-wait-for-model": "true"
-            },
+        // 1. PRIMARY CIVIC CHECK (ResNet-50)
+        const mainModel = "microsoft/resnet-50";
+        const resnetResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${mainModel}`, {
+            headers: { "Authorization": `Bearer ${hfToken.trim()}`, "Content-Type": "application/json" },
             method: "POST",
             body: JSON.stringify({ inputs: imageUrl }),
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[AI-API] Router Error (${response.status}):`, errorText);
-            return NextResponse.json({ error: `AI Service Unavailable (${response.status})`, isDown: true });
+        const resnetResult = await resnetResponse.json();
+
+        // 2. AI GENERATION CHECK (Fetch image first for Base64)
+        const imgRes = await fetch(imageUrl);
+        const imgBuffer = await imgRes.arrayBuffer();
+        const base64Img = Buffer.from(imgBuffer).toString('base64');
+
+        const detModel = "umm-maybe/AI-image-detector";
+        const detResponse = await fetch(`https://router.huggingface.co/hf-inference/models/${detModel}`, {
+            headers: { "Authorization": `Bearer ${hfToken.trim()}`, "Content-Type": "application/json" },
+            method: "POST",
+            body: JSON.stringify({ inputs: base64Img }),
+        });
+        const detResult = await detResponse.json();
+
+        // --- ANALYSIS LOGIC ---
+
+        // A. Is it AI Generated?
+        let isAIGenerated = false;
+        let aiScore = 0;
+
+        if (Array.isArray(detResult)) {
+            aiScore = detResult.find(r => r.label === 'artificial')?.score || 0;
+            isAIGenerated = aiScore > 0.7;
+        } else if (detResult?.error) {
+            console.warn('[AI-API] AI Detector Error:', detResult.error);
+            // Case where detector is down but ResNet is up - we proceed but log
         }
 
-        const result = await response.json();
-
-        // ACCURACY ENGINE: Keyword-based civic validation
-        // We look for any urban/infrastructure/waste related terms in the results
+        // B. Is it a Civic Issue?
         const civicKeywords = [
             'pothole', 'road', 'street', 'asphalt', 'pavement', 'manhole', 'sewer', 'crack', 'drain',
             'trash', 'garbage', 'waste', 'recycling', 'bin', 'ashcan', 'junk', 'plastic', 'bag', 'debris',
@@ -45,28 +57,67 @@ export async function POST(req) {
             'park', 'fountain', 'bench', 'sidewalk', 'curb', 'infrastructure', 'concrete'
         ];
 
-        if (Array.isArray(result) && result.length > 0) {
-            // Check top 10 results for any civic match
-            const top5 = result.slice(0, 10);
-            const matches = top5.filter(r =>
-                civicKeywords.some(key => r.label.toLowerCase().includes(key))
-            );
+        let topLabel = 'Unknown';
+        let topScore = 0;
+        let isCivicMatch = false;
 
-            // If we have a keyword match, we trust it more than the raw top score
-            const isVerified = matches.length > 0 || (top5[0].score > 0.4);
-            const bestLabel = matches.length > 0 ? matches[0].label : top5[0].label;
-            const bestScore = matches.length > 0 ? matches[0].score : top5[0].score;
+        if (Array.isArray(resnetResult) && resnetResult.length > 0) {
+            const top = resnetResult.slice(0, 5);
+            topLabel = top[0].label;
+            topScore = top[0].score;
+            isCivicMatch = top.some(r => civicKeywords.some(key => r.label.toLowerCase().includes(key)));
+        }
 
-            console.log(`[AI-API] Match Found: ${bestLabel} (${bestScore})`);
+        // C. Is it relevant to the TITLE?
+        const titleLower = (title || "").toLowerCase();
+        const isRelevantToTitle = Array.isArray(resnetResult) && resnetResult.slice(0, 10).some(r => {
+            const labelParts = r.label.toLowerCase().split(/[ ,]+/);
+            return labelParts.some(p => p.length > 3 && titleLower.includes(p));
+        });
 
+        console.log(`[AI-API] Analysis: Civic=${isCivicMatch}, AI=${isAIGenerated}, TitleMatch=${isRelevantToTitle}`);
+
+        // FINAL VERDICT
+        if (isAIGenerated) {
             return NextResponse.json({
-                label: bestLabel,
-                score: bestScore,
-                isVerified: isVerified
+                isVerified: false,
+                label: 'AI Generated Content Detected',
+                score: aiScore,
+                reason: 'Our safety system detected that this image was likely generated by AI. Please use a real photo.'
             });
         }
 
-        return NextResponse.json({ label: 'Unclassified', score: 0, isVerified: true });
+        if (!isCivicMatch && topScore < 0.3) {
+            return NextResponse.json({
+                isVerified: false,
+                label: topLabel,
+                score: topScore,
+                reason: 'This image doesn\'t appear to be related to any city infrastructure or waste issues.'
+            });
+        }
+
+        if (title && !isRelevantToTitle && topScore > 0.4) {
+            // If AI is very confident it's something totally different than the title
+            // (e.g. Title "Pothole" but AI sees "Cat")
+            const titleKeywords = titleLower.split(' ').filter(w => w.length > 3);
+            const hasKeywordMatch = titleKeywords.some(kw => topLabel.toLowerCase().includes(kw));
+
+            if (!hasKeywordMatch) {
+                return NextResponse.json({
+                    isVerified: false,
+                    label: topLabel,
+                    score: topScore,
+                    reason: `Image mismatch: The photo shows "${topLabel}", but your title is about "${title}". Please ensure the photo matches your report.`
+                });
+            }
+        }
+
+        return NextResponse.json({
+            label: topLabel,
+            score: topScore,
+            isVerified: true,
+            isAI: false
+        });
 
     } catch (error) {
         console.error('AI ROUTE EXCEPTION:', error);

@@ -200,7 +200,7 @@ export default function CitizenDashboard() {
         const verifyRes = await fetch('/api/verify-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageUrl })
+          body: JSON.stringify({ imageUrl, title: reportData.title })
         });
 
         if (!verifyRes.ok) {
@@ -225,7 +225,7 @@ export default function CitizenDashboard() {
             aiLabel = 'Manual (AI Down)';
             aiConfidence = 0;
           } else if (!verifyData.isVerified) {
-            alert(`AI rejected this image (Detected: ${verifyData.label || 'Unknown'}, Score: ${((verifyData.score || 0) * 100).toFixed(1)}%). Please upload a clear photo of a civic issue.`);
+            alert(`AI Verification Failed: ${verifyData.reason || ('Detected: ' + verifyData.label)} (Score: ${((verifyData.score || 0) * 100).toFixed(1)}%)`);
             // Optional: delete from storage here?
             setSubmitting(false);
             setStatusText('');
