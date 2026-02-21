@@ -15,6 +15,7 @@ reports.post('/submit', async (c) => {
 
     const {
       image,
+      title,
       latitude,
       longitude,
       description,
@@ -77,7 +78,7 @@ reports.post('/submit', async (c) => {
       .from('reports')
       .insert({
         user_id: userId || null,
-        title: description?.substring(0, 100) || 'Civic Issue',
+        title: title || description?.substring(0, 100) || 'Civic Issue',
         description,
         category: finalCategory,
         latitude: parseFloat(latitude),

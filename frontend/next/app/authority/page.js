@@ -28,7 +28,9 @@ function ReportCard({ report, onUpdateStatus, onEdit }) {
       )}
       <div style={{ padding: '20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{report.title || 'Untitled Report'}</h3>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+            {report.title || (report.category ? (report.category.charAt(0).toUpperCase() + report.category.slice(1) + ' Issue') : 'Untitled Report')}
+          </h3>
           <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', background: status.bg, color: status.color }}>{report.status}</span>
         </div>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '12px', lineHeight: 1.5 }}>{report.description || 'No description'}</p>
