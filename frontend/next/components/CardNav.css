@@ -1,0 +1,169 @@
+.card-nav-container {
+    position: fixed;
+    top: 10px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 0 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.card-nav {
+    width: 100%;
+    max-width: 1200px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    transition: border-color 0.3s ease;
+}
+
+.card-nav.open {
+    border-color: var(--accent);
+}
+
+.card-nav-top {
+    height: 60px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hamburger-menu {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    transition: transform 0.3s ease;
+}
+
+.hamburger-line {
+    width: 24px;
+    height: 2px;
+    background-color: currentColor;
+    transition: all 0.3s ease;
+}
+
+.hamburger-menu.open .hamburger-line:nth-child(1) {
+    transform: translateY(4px) rotate(45deg);
+}
+
+.hamburger-menu.open .hamburger-line:nth-child(2) {
+    transform: translateY(-4px) rotate(-45deg);
+}
+
+.logo-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.logo-text {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-shadow: 0 0 18px var(--accent-glow);
+    cursor: pointer;
+}
+
+.card-nav-cta-button {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.card-nav-cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.card-nav-content {
+    display: flex;
+    padding: 16px;
+    gap: 16px;
+    background: var(--bg-deep);
+}
+
+.nav-card {
+    flex: 1;
+    min-height: 160px;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.nav-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-5px);
+}
+
+.nav-card-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+}
+
+.nav-card-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nav-card-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+}
+
+.nav-card-link:hover {
+    opacity: 0.8;
+}
+
+.nav-card-link-icon {
+    font-size: 1.2rem;
+}
+
+@media (max-width: 768px) {
+    .card-nav-content {
+        flex-direction: column;
+    }
+
+    .nav-card {
+        min-height: auto;
+    }
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

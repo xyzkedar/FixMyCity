@@ -8,9 +8,10 @@
     "start": "next start"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "gsap": "^3.14.2",
     "next": "^15.1.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "@supabase/supabase-js": "^2.39.0"
+    "react-dom": "^19.0.0"
   }
 }

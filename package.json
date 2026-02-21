@@ -8,6 +8,7 @@
     "supabase": "^2.76.11"
   },
   "dependencies": {
+    "gsap": "^3.14.2",
     "motion": "^12.34.3"
   }
 }
