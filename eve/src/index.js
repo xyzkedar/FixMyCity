@@ -19,10 +19,10 @@ app.use('*', async (c, next) => {
 });
 
 // Routes
-app.get('/', (c) => c.json({ 
-  service: 'FixMyCity EVE', 
+app.get('/', (c) => c.json({
+  service: 'FixMyCity EVE',
   version: '1.0.0',
-  status: 'running' 
+  status: 'running'
 }));
 
 app.route('/api/auth', authRoutes);
@@ -38,5 +38,6 @@ console.log(`EVE running on http://localhost:${port}`);
 
 serve({
   fetch: app.fetch,
-  port
+  port,
+  hostname: '0.0.0.0'
 });

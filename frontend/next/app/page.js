@@ -613,6 +613,7 @@ export default function Home() {
     fetch(`${apiUrl}/api/reports/stats/summary`)
       .then(res => res.json())
       .then(data => {
+        console.log('--- Stats Debug ---', data);
         if (data.stats) setStats(data.stats);
         else setStats({ total: 0, resolved: 0 });
       })
