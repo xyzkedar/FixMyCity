@@ -614,34 +614,23 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         if (data.stats) setStats(data.stats);
-        else setStats({ total: 1240, resolved: 982 }); // Fallback for better empty state
+        else setStats({ total: 0, resolved: 0 });
       })
       .catch(err => {
-        console.log('Stats fetch error:', err);
-        setStats({ total: 1240, resolved: 982 }); // Fallback for demo
+        console.error('Stats fetch error:', err);
+        setStats({ total: 0, resolved: 0 });
       });
 
     fetch(`${apiUrl}/api/testimonials?limit=3`)
       .then(res => res.json())
       .then(data => {
-        if (data.testimonials && data.testimonials.length > 0) {
+        if (data.testimonials) {
           setTestimonials(data.testimonials);
-        } else {
-          // Fallback testimonials if none in DB
-          setTestimonials([
-            { name: 'Sarah J.', role: 'Resident', quote: 'Reported a pothole at 9 AM, it was fixed by 4 PM. Incredible service!', avatar: 'SJ' },
-            { name: 'Marcus Chen', role: 'City Official', quote: 'The AI verification saves us hours of manual sorting every week.', avatar: 'MC' },
-            { name: 'Elena R.', role: 'Community Leader', quote: 'Finally, a transparent way to see how our city is improving.', avatar: 'ER' }
-          ]);
         }
       })
       .catch(err => {
-        console.log('Testimonials fetch error:', err);
-        setTestimonials([
-          { name: 'Sarah J.', role: 'Resident', quote: 'Reported a pothole at 9 AM, it was fixed by 4 PM. Incredible service!', avatar: 'SJ' },
-          { name: 'Marcus Chen', role: 'City Official', quote: 'The AI verification saves us hours of manual sorting every week.', avatar: 'MC' },
-          { name: 'Elena R.', role: 'Community Leader', quote: 'Finally, a transparent way to see how our city is improving.', avatar: 'ER' }
-        ]);
+        console.error('Testimonials fetch error:', err);
+        setTestimonials([]);
       });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
