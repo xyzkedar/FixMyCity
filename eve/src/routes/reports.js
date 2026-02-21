@@ -230,9 +230,13 @@ reports.get('/leaderboard/top', async (c) => {
     data.forEach(item => {
       const id = item.resolved_by;
       if (!leaderboard[id]) {
+        const displayName = (item.profiles?.full_name && item.profiles.full_name.trim() !== '')
+          ? item.profiles.full_name
+          : (item.profiles?.username || 'Officer');
+
         leaderboard[id] = {
           id,
-          name: item.profiles?.full_name || 'Officer',
+          name: displayName,
           username: item.profiles?.username || 'officer',
           avatar: item.profiles?.avatar_url || null,
           resolvedCount: 0
