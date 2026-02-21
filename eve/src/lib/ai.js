@@ -15,7 +15,7 @@ const FLAGGED_LABELS = [
   'indoor', 'screenshot', 'drawing', 'cartoon', 'text', 'document'
 ];
 
-const AI_CONFIDENCE_THRESHOLD = 0.7;
+const AI_CONFIDENCE_THRESHOLD = 0.65;
 
 /**
  * Verify image using Hugging Face Inference API

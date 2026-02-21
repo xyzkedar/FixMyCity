@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Buffer } from 'buffer';
+const AI_CONFIDENCE_THRESHOLD = 0.65;
 
 export async function POST(req) {
     try {
@@ -87,7 +88,7 @@ export async function POST(req) {
             });
         }
 
-        if (!isCivicMatch && topScore < 0.3) {
+        if (!isCivicMatch && topScore < AI_CONFIDENCE_THRESHOLD) {
             return NextResponse.json({
                 isVerified: false,
                 label: topLabel,
